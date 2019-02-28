@@ -1,3 +1,4 @@
+#remove 'listops.' from import. Only there for my Pythonista
 from listops.listOperations import *
 from collections import deque
 
