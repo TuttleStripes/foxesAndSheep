@@ -1,5 +1,5 @@
-from listOperations import *
-from itertools import tee
+from listops.listOperations import *
+from collections import deque
 
 
 class fAndS:
@@ -21,8 +21,8 @@ class fAndS:
     self.nf = nf
     self.ns = ns
     self.bc = boatCapacity
-    self.start = [[self.nf, self.ns, 1], [0, 0, 0]]
-    self.end = [[0, 0, 0], [self.nf, self.ns, 1]]
+    self.start = ((self.nf, self.ns, 1), (0, 0, 0))
+    self.end = ((0, 0, 0), (self.nf, self.ns, 1))
     self.state = state or self.start[:]
     self.history = history or [self.state[:]]
 
@@ -41,22 +41,22 @@ class fAndS:
     return st8 not in self.history
 
   def movement(self, change):
-    curState = self.state[:]
+    curState = list(self.state[:])
     if curState[0][2]:
-      curState[0] = list(
+      curState[0] = tuple(
         funcLists(sub, curState[0], change)
         )
-      curState[1] = list(
+      curState[1] = tuple(
         funcLists(add, curState[1], change)
         )
     else:
-      curState[0] = list(
+      curState[0] = tuple(
         funcLists(add, curState[0], change)
         )
-      curState[1] = list(
+      curState[1] = tuple(
         funcLists(sub, curState[1], change)
         )
-    return curState
+    return tuple(curState)
 
   def successors(self):
     possibleMoves = []
@@ -68,19 +68,20 @@ class fAndS:
     for move in possibleMoves:
       nextMove = self.movement(move)
       if self.isValid(nextMove):
-        yield fAndS(self.nf, self.ns, self.bc, nextMove, self.history + [nextMove])
+        yield fAndS(self.nf, self.ns, self.bc, nextMove, self.history + [(nextMove)])
 
 
 def process(numFox, numSheep, boatCapacity):
   '''Processes solutions'''
   state = fAndS(numFox, numSheep, boatCapacity)
-  nextActions = [state]
-  previousActions = []
+  nextActions = deque()
+  nextActions.append(state)
+  previousActions = set()
   while nextActions:
-    state = nextActions.pop(0)
+    state = nextActions.popleft()
     if state.isGoal():
       yield state
-    previousActions.append(state)
+    previousActions.add(state)
     children = state.successors()
     for child in children:
       if (child not in nextActions) or (child not in previousActions):
@@ -89,7 +90,7 @@ def process(numFox, numSheep, boatCapacity):
 
 class solutions:
   def __init__(self, nf, ns, bc):
-    self.sols = list(process(nf, ns, bc))
+    self.sols = tuple(process(nf, ns, bc))
   
   def stepForm(self, stepNum, step):
     '''Formats a step'''
