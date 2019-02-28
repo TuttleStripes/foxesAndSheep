@@ -1,4 +1,4 @@
-from listops.listOperations import *
+from listOperations import *
 from itertools import tee
 
 
