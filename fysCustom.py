@@ -1,4 +1,5 @@
-from listOperations import *
+from listops.listOperations import *
+from itertools import tee
 
 
 class fAndS:
@@ -15,6 +16,10 @@ class fAndS:
 
 
   def __init__(self, nf, ns, boatCapacity, state=None, history = []):
+    '''
+    nf = number of foxes
+    ns = number of sheep
+    '''
     self.nf = nf
     self.ns = ns
     self.bc = boatCapacity
@@ -83,7 +88,6 @@ def process(numFox, numSheep, boatCapacity):
         nextActions.append(child)
   
 
-
 class solutions:
   def __init__(self, nf, ns, bc):
     self.sols = list(process(nf, ns, bc))
@@ -99,20 +103,25 @@ class solutions:
     return header + body + tail
   
   def printout(self):
+    solList = self.sols
     print('Solutions')
     print('='*25)
-    for sn, s in enumerate(self.sols, start=1):
+    for sn, s in enumerate(solList, start=1):
       print(self.solForm(sn, s.history))
       
-  def smallest(self):
-    smallLen = len(min(self.sols, key=lambda x: len(x.history)).history)
+  def shortList(self):
+    solList = self.sols
+    smallLen = len(min(solList, key=lambda x: len(x.history)).history)
     print('='*25)
-    print('Smallest solutions:')
-    for sn, s in enumerate(self.sols, start=1):
+    print('Short solutions:')
+    print('-'*25)
+    
+    smallList = []
+    for sn, s in enumerate(solList, start=1):
       if len(s.history) == smallLen:
         print(self.solForm(sn, s.history))
-    
+        smallList.append([sn, s])
+      else:
+        break
 
 
-if __name__ == '__main__':
-  solutes = solutions(5,5,3)
