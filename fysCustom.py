@@ -11,8 +11,6 @@ class fAndS:
   state[n][1] is sheep
   state[n][2] is 'boat on this side' (1 means on that side, 0 means not)
   '''
-  start = [[3, 3, 1], [0, 0, 0]]
-  end = [[0, 0, 0], [3, 3, 1]]
 
 
   def __init__(self, nf, ns, boatCapacity, state=None, history = []):
@@ -74,6 +72,7 @@ class fAndS:
 
 
 def process(numFox, numSheep, boatCapacity):
+  '''Processes solutions'''
   state = fAndS(numFox, numSheep, boatCapacity)
   nextActions = [state]
   previousActions = []
@@ -93,9 +92,11 @@ class solutions:
     self.sols = list(process(nf, ns, bc))
   
   def stepForm(self, stepNum, step):
+    '''Formats a step'''
     return 'Step {}: {}F {}S {}B | {}F {}S {}B'.format(stepNum, *step[0], *step[1])
     
   def solForm(self, solNum, sol):
+    '''Formats a solution'''
     header = f'Solution {solNum}:\n{"-"*25}\n'
     body = '\n'.join([self.stepForm(stepNum, step) for stepNum, step in enumerate(sol)])
     tail = '\n' + '-'*25
@@ -103,6 +104,7 @@ class solutions:
     return header + body + tail
   
   def printout(self):
+    '''Prints all solutions'''
     solList = self.sols
     print('Solutions')
     print('='*25)
@@ -110,6 +112,7 @@ class solutions:
       print(self.solForm(sn, s.history))
       
   def shortList(self):
+    '''Prints the shortest solutions'''
     solList = self.sols
     smallLen = len(min(solList, key=lambda x: len(x.history)).history)
     print('='*25)
