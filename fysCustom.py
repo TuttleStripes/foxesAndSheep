@@ -1,5 +1,5 @@
-from listops.listOperations import *
-import time
+from listops.listops import listFuncs, add, sub
+from time import time
 
 
 class fAndS:
@@ -55,36 +55,47 @@ class fAndS:
 
   def movement(self, st8, change):
     '''Takes the current state and returns a modification of it based on the inputted change of positions'''
-    curState = list(st8[:])
+        
+    curState = list(st8)
     if curState[0][2]:
       curState[0] = tuple(
-        funcLists(sub, curState[0], change)
+        listFuncs(sub, curState[0], change)
         )
       curState[1] = tuple(
-        funcLists(add, curState[1], change)
+        listFuncs(add, curState[1], change)
         )
     else:
       curState[0] = tuple(
-        funcLists(add, curState[0], change)
+        listFuncs(add, curState[0], change)
         )
       curState[1] = tuple(
-        funcLists(sub, curState[1], change)
+        listFuncs(sub, curState[1], change)
         )
     return tuple(curState)
+
 
   def successors(self, st8=None):
     '''Yields a generator containing lists of the current state and potential successive states'''
     st8 = st8 or self.state[:]
-    for move in self.posMoves:
-      nextMove = self.movement(st8, move)
-      if self.isValid(nextMove):
-        yield [st8, nextMove]
+    
+    nextMoves = [
+      self.movement(st8, move)
+      for move in self.posMoves
+      if self.isValid(self.movement(st8, move))
+    ]
+    goals = [i for i in nextMoves if self.isGoal(i)]
+    if goals:
+      yield (st8, goals[0])
+      return
+    else:
+      for move in nextMoves:
+        yield (st8, move)
 
 
 def process(nf, ns, bc):
   '''Yields a generator of all paths that solve the problem'''
   main = fAndS(nf, ns, bc)
-  history = list(main.successors())
+  history = set(main.successors())
   while history:
     curHis = history.pop()
     curState = curHis[-1]
@@ -93,7 +104,7 @@ def process(nf, ns, bc):
     children = main.successors(curState)
     for child in children:
       if child[-1] not in curHis:
-        history.append(curHis+[child[-1]])
+        history.add(curHis+(child[-1],))
 
 
 class solutions:
@@ -122,37 +133,54 @@ class solutions:
     
     return header + body + tail
   
-  def printout(self, limit=float('inf')):
+  def printout(self, stepLim=float('inf'),  solLim=float('inf'), timeout=float('inf')):
     '''Prints all solutions or solutions up to a limit'''
+    start = time()
     solList = process(*self.params)
     print('Solutions')
     print('='*25)
     for sn, s in enumerate(solList, start=1):
       print(self.solForm(sn, s))
-      if sn == limit:
+      if len(s)-1 >= stepLim:
         break
+      if sn == solLim:
+        break
+      if time()-start >= timeout:
+        break
+    print(f'Time elapsed: {time()-start}')
       
-  def shortest(self, acceptable=0, timeout=float('inf')):
-    '''Prints the shortest solution or the first solution less than or equal to an acceptable number of steps.'''
+  def shortest(self, stepLim=0, solLim=float('inf'), timeout=float('inf')):
+    '''Prints the shortest solution.
+    Optional:
+      stepLim: the first solution less than or equal to an acceptable number of steps.
+      solLim: shortest solution within *n* solutions.
+      timeout: find solutions until time has been reached'''
     sols = process(*self.params)
-    start = time.time()
+    start = time()
     short = (1, next(sols))
-    if time.time()-start < timeout:
-      for i, v in enumerate(sols, start=2):
-        if len(v) < len(short[1]):
-          short = (i, v)
-        if len(v)-1 <= acceptable:
+    if time()-start < timeout:
+      for sn, s in enumerate(sols, start=2):
+        if len(s) < len(short[1]):
+          short = (sn, s)
+        if len(s)-1 <= stepLim:
           break
-        if time.time()-start >= timeout:
+        if sn == solLim:
+          break
+        if time()-start >= timeout:
           break
     
     print('Shortest solution')
     print('=' * 25)
     print(self.solForm(*short))
+    return short
 
 
 if __name__ == '__main__':
-  nf = int(input('Number of foxes: '))
-  ns = int(input('Number of sheep: '))
-  bc = int(input('Boat capacity: '))
-  sols = solutions(nf, ns, bc)
+  if int(input('Input method? (1: manual, 0: preset): ')):
+    nf = int(input('Number of foxes: '))
+    ns = int(input('Number of sheep: '))
+    bc = int(input('Boat capacity: '))
+    sols = solutions(nf, ns, bc)
+  else:
+    sols = solutions(5,5,4)
+    sols.printout()
